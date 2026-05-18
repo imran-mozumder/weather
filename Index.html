@@ -1,669 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rain Tomorrow Forecaster</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Clash+Display:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#04080f;
-  --surface:#080e1a;
-  --card:#0b1220;
-  --border:#0f1f35;
-  --border2:#162840;
-  --accent:#00d4ff;
-  --accent2:#7c3aed;
-  --rain:#4f8ef7;
-  --dry:#00c896;
-  --warn:#f59e0b;
-  --danger:#ef4444;
-  --text:#e8f4fd;
-  --muted:#4a6a8a;
-  --muted2:#2a4a6a;
-  --glow:rgba(0,212,255,0.15);
-}
-
 body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'DM Mono',monospace;
-  min-height:100vh;
-  overflow-x:hidden;
+  background:#0b1220;
+  color:white;
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:20px;
 }
 
-/* Animated background grid */
-body::before{
-  content:'';
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;z-index:0;
-  animation:gridMove 20s linear infinite;
-}
-@keyframes gridMove{from{background-position:0 0}to{background-position:40px 40px}}
-
-body::after{
-  content:'';
-  position:fixed;inset:0;
-  background:
-    radial-gradient(ellipse 60% 40% at 15% 15%, rgba(0,212,255,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(124,58,237,0.06) 0%, transparent 60%);
-  pointer-events:none;z-index:0;
+.container{
+  max-width:900px;
+  margin:auto;
 }
 
-.wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;position:relative;z-index:1}
-
-
-header{text-align:center;padding:3rem 0 2.5rem;position:relative}
-.header-badge{
-  display:inline-block;
-  font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;
-  color:var(--accent);border:1px solid rgba(0,212,255,0.3);
-  padding:0.3rem 1rem;border-radius:99px;margin-bottom:1.5rem;
-  background:rgba(0,212,255,0.05);
+h1{
+  text-align:center;
+  color:#00d4ff;
 }
-header h1{
-  font-family:'Clash Display',sans-serif;
-  font-size:clamp(2.2rem,5vw,3.8rem);
-  font-weight:700;letter-spacing:-2px;line-height:1;
-  color:#fff;margin-bottom:0.8rem;
-}
-header h1 span{
-  background:linear-gradient(135deg,var(--accent),var(--rain),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-header p{color:var(--muted);font-size:0.8rem;letter-spacing:0.05em}
 
-/* Rain animation */
-.rain-drops{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none}
-.drop{
-  position:absolute;top:-20px;width:1px;height:15px;
-  background:linear-gradient(transparent,rgba(0,212,255,0.4));
-  border-radius:99px;animation:fall linear infinite;
-}
-@keyframes fall{to{transform:translateY(200px);opacity:0}}
-
-/* ── PIPELINE STATUS ── */
-.pipeline{
-  display:flex;align-items:center;justify-content:center;
-  gap:0;margin-bottom:2.5rem;flex-wrap:wrap;
-}
-.pipe-step{
-  display:flex;align-items:center;gap:0.5rem;
-  padding:0.5rem 1rem;font-size:0.68rem;letter-spacing:0.08em;
-  text-transform:uppercase;color:var(--muted);
-  border:1px solid var(--border2);
-  background:var(--card);position:relative;
-  transition:all 0.4s ease;cursor:default;
-}
-.pipe-step:first-child{border-radius:8px 0 0 8px}
-.pipe-step:last-child{border-radius:0 8px 8px 0}
-.pipe-step.done{color:var(--dry);border-color:rgba(0,200,150,0.4);background:rgba(0,200,150,0.05)}
-.pipe-step.active{color:var(--accent);border-color:rgba(0,212,255,0.5);background:rgba(0,212,255,0.08);
-  box-shadow:0 0 20px rgba(0,212,255,0.1)}
-.pipe-step .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-.pipe-step.active .dot{animation:blink 1s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-.pipe-arrow{color:var(--muted2);font-size:0.7rem;padding:0 2px}
-
-/* ── GRID LAYOUT ── */
-.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
-@media(max-width:700px){.main-grid{grid-template-columns:1fr}}
-
-/* ── CARDS ── */
 .card{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:16px;padding:1.4rem;position:relative;overflow:hidden;
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  margin-top:20px;
 }
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(0,212,255,0.3),transparent);
-}
-.card-title{
-  font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:0.6rem;
-}
-.card-title .icon{font-size:0.9rem}
 
-/* ── FORM FIELDS ── */
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:0.7rem}
-.field{display:flex;flex-direction:column;gap:0.3rem}
-.field label{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
-.field input,.field select{
-  background:#060c18;border:1px solid var(--border2);
-  color:var(--text);padding:0.5rem 0.7rem;
-  border-radius:8px;font-family:'DM Mono',monospace;font-size:0.8rem;
-  transition:border-color 0.2s,box-shadow 0.2s;
-  -webkit-appearance:none;
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
 }
-.field input:focus,.field select:focus{
-  outline:none;border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(0,212,255,0.08);
-}
-.field input:hover,.field select:hover{border-color:var(--muted2)}
-.field select option{background:#060c18}
 
-/* Toggle */
-.toggle-row{display:flex;gap:0.5rem;margin-bottom:0.7rem}
-.toggle-btn{
-  flex:1;padding:0.45rem;border-radius:7px;border:1px solid var(--border2);
-  background:transparent;color:var(--muted);font-family:'DM Mono',monospace;
-  font-size:0.72rem;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;
+input{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  margin-top:5px;
+  background:#1f2937;
+  color:white;
 }
-.toggle-btn.active{background:rgba(0,212,255,0.1);color:var(--accent);border-color:rgba(0,212,255,0.4)}
 
-/* ── RUN BUTTON ── */
-.btn-run{
-  width:100%;padding:1rem;
-  background:linear-gradient(135deg,#0099cc,#00d4ff 40%,#7c3aed);
-  border:none;border-radius:12px;color:#fff;
-  font-family:'Clash Display',sans-serif;font-size:1.1rem;font-weight:600;
-  cursor:pointer;letter-spacing:0.02em;
-  transition:opacity 0.2s,transform 0.15s,box-shadow 0.2s;
-  position:relative;overflow:hidden;margin-bottom:1.2rem;
+button{
+  width:100%;
+  padding:15px;
+  margin-top:20px;
+  border:none;
+  border-radius:10px;
+  background:#00d4ff;
+  color:black;
+  font-size:18px;
+  cursor:pointer;
+  font-weight:bold;
 }
-.btn-run::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,0.15),transparent 70%);
-  transform:translateX(-100%);transition:transform 0.5s;
-}
-.btn-run:hover::after{transform:translateX(100%)}
-.btn-run:hover{opacity:0.95;box-shadow:0 8px 30px rgba(0,212,255,0.25)}
-.btn-run:active{transform:scale(0.99)}
-.btn-run:disabled{opacity:0.5;cursor:not-allowed}
 
-/* ── OUTPUT PANEL ── */
-.output-panel{
-  grid-column:1/-1;
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:16px;padding:2rem;
-  display:none;animation:slideUp 0.35s ease;
-  position:relative;overflow:hidden;
+button:hover{
+  opacity:0.9;
 }
-@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.output-panel.rain-result{border-color:rgba(79,142,247,0.4);box-shadow:0 0 40px rgba(79,142,247,0.08)}
-.output-panel.dry-result{border-color:rgba(0,200,150,0.4);box-shadow:0 0 40px rgba(0,200,150,0.08)}
 
-.output-grid{display:grid;grid-template-columns:auto 1fr auto;gap:2rem;align-items:center}
-@media(max-width:600px){.output-grid{grid-template-columns:1fr;text-align:center}}
-
-.result-icon-wrap{
-  width:90px;height:90px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:2.8rem;flex-shrink:0;
-  border:2px solid currentColor;
-  animation:pulseIcon 2s ease-in-out infinite;
+.result{
+  margin-top:20px;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+  display:none;
 }
-@keyframes pulseIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-.rain-result .result-icon-wrap{color:var(--rain);background:rgba(79,142,247,0.08)}
-.dry-result  .result-icon-wrap{color:var(--dry); background:rgba(0,200,150,0.08)}
 
-.result-main{}
-.result-verdict{
-  font-family:'Clash Display',sans-serif;
-  font-size:2rem;font-weight:700;letter-spacing:-1px;margin-bottom:0.3rem;
+.rain{
+  background:#1e3a8a;
 }
-.rain-result .result-verdict{color:var(--rain)}
-.dry-result  .result-verdict{color:var(--dry)}
-.result-sub{color:var(--muted);font-size:0.75rem;letter-spacing:0.05em}
 
-/* Probability meter */
-.prob-section{min-width:160px}
-.prob-label{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
-.prob-number{
-  font-family:'Clash Display',sans-serif;font-size:2.8rem;
-  font-weight:700;letter-spacing:-2px;line-height:1;margin-bottom:0.6rem;
+.clear{
+  background:#065f46;
 }
-.rain-result .prob-number{color:var(--rain)}
-.dry-result  .prob-number{color:var(--dry)}
-.meter{height:6px;background:var(--border2);border-radius:99px;overflow:hidden;margin-bottom:0.4rem}
-.meter-fill{height:100%;border-radius:99px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1)}
-.rain-result .meter-fill{background:linear-gradient(90deg,var(--rain),#818cf8)}
-.dry-result  .meter-fill{background:linear-gradient(90deg,var(--dry),#00ffaa)}
-.meter-ends{display:flex;justify-content:space-between;font-size:0.58rem;color:var(--muted)}
 
-/* Metrics row */
-.metrics-row{
-  display:flex;gap:0.8rem;flex-wrap:wrap;
-  margin-top:1.5rem;padding-top:1.5rem;
-  border-top:1px solid var(--border);
+canvas{
+  background:white;
+  border-radius:10px;
+  margin-top:20px;
 }
-.metric-chip{
-  background:#060c18;border:1px solid var(--border2);
-  border-radius:8px;padding:0.5rem 0.9rem;
-  font-size:0.65rem;
-}
-.metric-chip .mc-label{color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.2rem}
-.metric-chip .mc-val{color:var(--text);font-size:0.85rem}
 
-/* ── LOG PANEL ── */
-.log-panel{
-  background:var(--card);border:1px solid var(--border2);border-radius:16px;
-  padding:1.2rem;margin-bottom:1.2rem;font-size:0.72rem;
-  max-height:180px;overflow-y:auto;
+@media(max-width:700px){
+  .grid{
+    grid-template-columns:1fr;
+  }
 }
-.log-panel::-webkit-scrollbar{width:4px}
-.log-panel::-webkit-scrollbar-track{background:transparent}
-.log-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
-.log-line{padding:0.15rem 0;display:flex;gap:0.8rem;border-bottom:1px solid rgba(255,255,255,0.02)}
-.log-time{color:var(--muted);flex-shrink:0;font-size:0.65rem}
-.log-text.info{color:var(--accent)}
-.log-text.success{color:var(--dry)}
-.log-text.warn{color:var(--warn)}
-.log-text.data{color:#94a3b8}
-
-/* ── STATS ROW ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1.2rem}
-@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
-.stat-card{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:12px;padding:1rem;text-align:center;
-}
-.stat-val{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;color:var(--accent)}
-.stat-lbl{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.2rem}
-
-/* ── LOADING ── */
-.loading-overlay{
-  position:fixed;inset:0;background:rgba(4,8,15,0.92);
-  display:none;align-items:center;justify-content:center;
-  flex-direction:column;gap:1.2rem;z-index:100;
-  backdrop-filter:blur(4px);
-}
-.loading-overlay.show{display:flex}
-.spinner{
-  width:48px;height:48px;border-radius:50%;
-  border:2px solid var(--border2);
-  border-top-color:var(--accent);
-  animation:spin 0.8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-msg{color:var(--accent);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase}
-.loading-steps{display:flex;flex-direction:column;gap:0.3rem;margin-top:0.5rem}
-.lstep{font-size:0.65rem;color:var(--muted);letter-spacing:0.05em;opacity:0;transition:opacity 0.3s,color 0.3s}
-.lstep.show{opacity:1}
-.lstep.done{color:var(--dry)}
-
-/* ── CHARTS ── */
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem}
-@media(max-width:600px){.charts-row{grid-template-columns:1fr}}
-.chart-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:1.2rem}
-.chart-title{font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
-canvas{width:100%!important}
-
-/* scrollbar */
-html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 </style>
 </head>
 <body>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-msg" id="loadingMsg">Initialising pipeline...</div>
-  <div class="loading-steps" id="loadingSteps"></div>
+<div class="container">
+
+<h1>🌧️ Rain Tomorrow Forecaster</h1>
+
+<div class="card">
+
+<div class="grid">
+
+<div>
+<label>Humidity 9am</label>
+<input type="number" id="Humidity9am" value="72">
 </div>
 
-<div class="wrap">
+<div>
+<label>Humidity 3pm</label>
+<input type="number" id="Humidity3pm" value="55">
+</div>
 
-  <!-- Header -->
-  <header>
-    <div class="rain-drops" id="rainDrops"></div>
-    <div class="header-badge">ML Dashboard · Random Forest · Python 3.11</div>
-    <h1>Rain Tomorrow<br><span>Forecaster</span></h1>
-    <p>Rain in Australia Dataset · 145,460 weather observations · 23 features</p>
-  </header>
+<div>
+<label>Pressure 9am</label>
+<input type="number" id="Pressure9am" value="1015">
+</div>
 
-  <!-- Pipeline status -->
-  <div class="pipeline">
-    <div class="pipe-step done" id="ps0"><span class="dot"></span>Data Loaded</div>
-    <div class="pipe-arrow">›</div>
-    <div class="pipe-step done" id="ps1"><span class="dot"></span>Cleaned</div>
-    <div class="pipe-arrow">›</div>
-    <div class="pipe-step done" id="ps2"><span class="dot"></span>Features</div>
-    <div class="pipe-arrow">›</div>
-    <div class="pipe-step done" id="ps3"><span class="dot"></span>Trained</div>
-    <div class="pipe-arrow">›</div>
-    <div class="pipe-step" id="ps4"><span class="dot"></span>Predicting</div>
-  </div>
+<div>
+<label>Pressure 3pm</label>
+<input type="number" id="Pressure3pm" value="1012">
+</div>
 
-  <!-- Model stats -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-val">0.878</div>
-      <div class="stat-lbl">ROC-AUC</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">0.721</div>
-      <div class="stat-lbl">F1 Score</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">200</div>
-      <div class="stat-lbl">RF Trees</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">22</div>
-      <div class="stat-lbl">Features</div>
-    </div>
-  </div>
+<div>
+<label>Rainfall Today</label>
+<input type="number" id="Rainfall" value="0">
+</div>
 
-  <!-- Console log -->
-  <div class="log-panel" id="logPanel">
-    <div class="log-line"><span class="log-time">00:00:01</span><span class="log-text info">▶ Pipeline initialised — Rain in Australia dataset</span></div>
-    <div class="log-line"><span class="log-time">00:00:02</span><span class="log-text data">  Loaded 145,460 rows × 23 columns</span></div>
-    <div class="log-line"><span class="log-time">00:00:03</span><span class="log-text data">  Dropped high-missing cols: ['Sunshine','Evaporation']</span></div>
-    <div class="log-line"><span class="log-time">00:00:04</span><span class="log-text data">  Imputed humidity/pressure — median per Location</span></div>
-    <div class="log-line"><span class="log-time">00:00:05</span><span class="log-text data">  Engineered: TempRange, HumidityDrop, PressureChange</span></div>
-    <div class="log-line"><span class="log-time">00:00:08</span><span class="log-text data">  Split → Train:101k | Val:14k | Test:29k (stratified)</span></div>
-    <div class="log-line"><span class="log-time">00:00:12</span><span class="log-text info">▶ Training Logistic Regression…</span></div>
-    <div class="log-line"><span class="log-time">00:00:14</span><span class="log-text success">  ✓ LR done  ROC-AUC=0.861  F1=0.651</span></div>
-    <div class="log-line"><span class="log-time">00:00:16</span><span class="log-text info">▶ Training Random Forest (200 trees)…</span></div>
-    <div class="log-line"><span class="log-time">00:00:52</span><span class="log-text success">  ✓ RF done  ROC-AUC=0.878  F1=0.721 ← BEST</span></div>
-    <div class="log-line"><span class="log-time">00:01:10</span><span class="log-text info">▶ Training XGBoost…</span></div>
-    <div class="log-line"><span class="log-time">00:01:45</span><span class="log-text success">  ✓ XGB done ROC-AUC=0.875  F1=0.714</span></div>
-    <div class="log-line"><span class="log-time">00:01:46</span><span class="log-text success">  ✓ Best model saved → models/best_model.pkl</span></div>
-    <div class="log-line"><span class="log-time">00:01:47</span><span class="log-text success">  ✓ Ready — enter weather data and click Predict</span></div>
-  </div>
+<div>
+<label>Wind Gust Speed</label>
+<input type="number" id="WindGustSpeed" value="40">
+</div>
 
-  <!-- Input + charts -->
-  <div class="main-grid">
+</div>
 
-    <!-- LEFT: Temperature & Wind -->
-    <div class="card">
-      <div class="card-title"><span class="icon">🌡️</span> Temperature & Wind</div>
+<button onclick="predictRain()">Run Prediction</button>
 
-      <div class="field-row">
-        <div class="field"><label>Min Temp (°C)</label><input type="number" id="MinTemp" value="14" step="0.1"></div>
-        <div class="field"><label>Max Temp (°C)</label><input type="number" id="MaxTemp" value="26" step="0.1"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Temp 9am (°C)</label><input type="number" id="Temp9am" value="18" step="0.1"></div>
-        <div class="field"><label>Temp 3pm (°C)</label><input type="number" id="Temp3pm" value="24" step="0.1"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Wind Gust (km/h)</label><input type="number" id="WindGustSpeed" value="42" step="1"></div>
-        <div class="field"><label>Wind 9am (km/h)</label><input type="number" id="WindSpeed9am" value="15" step="1"></div>
-      </div>
-      <div class="field"><label>Wind 3pm (km/h)</label><input type="number" id="WindSpeed3pm" value="22" step="1"></div>
-    </div>
+<div class="result" id="resultBox">
+<h2 id="resultText"></h2>
+<h3 id="probability"></h3>
+</div>
 
-    <!-- RIGHT: Humidity & Pressure -->
-    <div class="card">
-      <div class="card-title"><span class="icon">💧</span> Humidity, Pressure & Rain</div>
+</div>
 
-      <div class="field-row">
-        <div class="field"><label>Humidity 9am (%)</label><input type="number" id="Humidity9am" value="72" min="0" max="100"></div>
-        <div class="field"><label>Humidity 3pm (%)</label><input type="number" id="Humidity3pm" value="55" min="0" max="100"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Pressure 9am (hPa)</label><input type="number" id="Pressure9am" value="1015" step="0.1"></div>
-        <div class="field"><label>Pressure 3pm (hPa)</label><input type="number" id="Pressure3pm" value="1012" step="0.1"></div>
-      </div>
-      <div class="field"><label>Rainfall Today (mm)</label><input type="number" id="Rainfall" value="0" min="0" step="0.1"></div>
+<div class="card">
+<h2>Model Comparison</h2>
+<canvas id="chart"></canvas>
+</div>
 
-      <div style="margin-top:0.7rem">
-        <div class="field" style="margin-bottom:0.4rem"><label>Did it rain today?</label></div>
-        <div class="toggle-row">
-          <button class="toggle-btn" id="rainNo" onclick="setRain(0)">☀️ No Rain</button>
-          <button class="toggle-btn" id="rainYes" onclick="setRain(1)">🌧️ Yes, Rained</button>
-        </div>
-      </div>
-    </div>
+</div>
 
-  </div>
-
-  <!-- Predict button -->
-  <button class="btn-run" id="predictBtn" onclick="runPredict()">
-    ⚡ &nbsp; Run Prediction
-  </button>
-
-  <!-- Output panel -->
-  <div class="output-panel" id="outputPanel">
-    <div class="output-grid">
-      <div class="result-icon-wrap" id="resultIcon">🔮</div>
-      <div class="result-main">
-        <div class="result-verdict" id="resultVerdict">—</div>
-        <div class="result-sub" id="resultSub">—</div>
-        <div class="metrics-row" id="metricsRow"></div>
-      </div>
-      <div class="prob-section">
-        <div class="prob-label">Rain Probability</div>
-        <div class="prob-number" id="probNumber">—</div>
-        <div class="meter"><div class="meter-fill" id="meterFill" style="width:0%"></div></div>
-        <div class="meter-ends"><span>0%</span><span>100%</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-title">Feature Importance (Top 8)</div>
-      <canvas id="chartImportance" height="220"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Model Comparison — ROC-AUC</div>
-      <canvas id="chartModels" height="220"></canvas>
-    </div>
-  </div>
-
-</div><!-- /wrap -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-// ── Rain drops animation
-(function(){
-  const c=document.getElementById('rainDrops');
-  for(let i=0;i<18;i++){
-    const d=document.createElement('div');
-    d.className='drop';
-    d.style.left=Math.random()*100+'%';
-    d.style.animationDuration=(1.2+Math.random()*1.5)+'s';
-    d.style.animationDelay=Math.random()*2+'s';
-    d.style.opacity=0.3+Math.random()*0.4;
-    c.appendChild(d);
-  }
-})();
 
-// ── State
-let rainToday=0;
-function setRain(v){
-  rainToday=v;
-  document.getElementById('rainNo').classList.toggle('active',v===0);
-  document.getElementById('rainYes').classList.toggle('active',v===1);
+function getValue(id){
+  return parseFloat(document.getElementById(id).value) || 0;
 }
-setRain(0);
 
-function n(id){return parseFloat(document.getElementById(id).value)||0}
+function predictRain(){
 
-// ── Predict logic (deterministic ML simulation)
-function computeProb(){
-  const h9=n('Humidity9am'), h3=n('Humidity3pm');
-  const p9=n('Pressure9am'), p3=n('Pressure3pm');
-  const rain=n('Rainfall'), wg=n('WindGustSpeed');
-  const tmin=n('MinTemp'), tmax=n('MaxTemp');
+  let humidity9 = getValue("Humidity9am");
+  let humidity3 = getValue("Humidity3pm");
+  let pressure9 = getValue("Pressure9am");
+  let pressure3 = getValue("Pressure3pm");
+  let rainfall = getValue("Rainfall");
+  let wind = getValue("WindGustSpeed");
 
-  // Feature-weighted formula matching Random Forest behaviour
   let score = 0;
-  score += (h9  - 50) * 0.018;   // humidity 9am
-  score += (h3  - 45) * 0.022;   // humidity 3pm (stronger predictor)
-  score += (1013 - p3) * 0.025;  // low pressure → rain
-  score += (p9  - p3)  * 0.020;  // pressure drop
-  score += (wg  - 35)  * 0.008;  // high wind gust
-  score += rain         * 0.035;  // rainfall today
-  score += rainToday    * 0.28;   // rained today (strong signal)
-  score += (tmax - tmin < 8) ? 0.10 : 0; // small temp range → cloud
 
-  // Sigmoid
-  const prob = 1 / (1 + Math.exp(-score));
-  return Math.min(0.97, Math.max(0.03, prob));
-}
+  score += (humidity9 - 50) * 0.018;
+  score += (humidity3 - 45) * 0.022;
+  score += (1013 - pressure3) * 0.025;
+  score += rainfall * 0.035;
+  score += (wind - 35) * 0.008;
 
-function addLog(text, type='info'){
-  const panel=document.getElementById('logPanel');
-  const now=new Date();
-  const t=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-  const line=document.createElement('div');
-  line.className='log-line';
-  line.innerHTML=`<span class="log-time">${t}</span><span class="log-text ${type}">${text}</span>`;
-  panel.appendChild(line);
-  panel.scrollTop=panel.scrollHeight;
-}
+  let probability = 1 / (1 + Math.exp(-score));
 
-async function runPredict(){
-  const btn=document.getElementById('predictBtn');
-  btn.disabled=true;btn.textContent='Running…';
+  probability = Math.max(0.03, Math.min(0.97, probability));
 
-  // Pipeline step
-  const ps4=document.getElementById('ps4');
-  ps4.classList.add('active');
+  let percent = (probability * 100).toFixed(1);
 
-  // Loading overlay
-  const overlay=document.getElementById('loadingOverlay');
-  const msg=document.getElementById('loadingMsg');
-  const steps=document.getElementById('loadingSteps');
-  overlay.classList.add('show');
-  steps.innerHTML='';
+  let willRain = probability >= 0.45;
 
-  const lsteps=[
-    'Reading weather inputs…',
-    'Scaling features…',
-    'Running Random Forest (200 trees)…',
-    'Aggregating votes…',
-    'Applying optimal threshold…',
-  ];
-  for(let s of lsteps){
-    const el=document.createElement('div');
-    el.className='lstep';el.textContent=s;
-    steps.appendChild(el);
+  let box = document.getElementById("resultBox");
+  let text = document.getElementById("resultText");
+  let prob = document.getElementById("probability");
+
+  box.style.display = "block";
+
+  if(willRain){
+    box.className = "result rain";
+    text.innerHTML = "🌧️ Rain Expected Tomorrow";
+  }else{
+    box.className = "result clear";
+    text.innerHTML = "☀️ No Rain Tomorrow";
   }
 
-  // Animate steps
-  for(let i=0;i<steps.children.length;i++){
-    await sleep(300);
-    steps.children[i].classList.add('show');
-    msg.textContent=lsteps[i];
-    if(i>0) steps.children[i-1].classList.add('done');
-  }
-  await sleep(400);
-  overlay.classList.remove('show');
-
-  // Compute
-  const prob=computeProb();
-  const willRain=prob>=0.45;
-  const pct=(prob*100).toFixed(1);
-
-  // Logs
-  addLog('▶ Predict called — feature vector assembled','info');
-  addLog(`  Humidity drop : ${(n('Humidity9am')-n('Humidity3pm')).toFixed(1)}%`,'data');
-  addLog(`  Pressure Δ    : ${(n('Pressure3pm')-n('Pressure9am')).toFixed(1)} hPa`,'data');
-  addLog(`  Temp range    : ${(n('MaxTemp')-n('MinTemp')).toFixed(1)}°C`,'data');
-  addLog(`  Raw probability: ${prob.toFixed(4)}`,'data');
-  addLog(`  Threshold     : 0.450`,'data');
-  addLog(`✓ Prediction → ${willRain?'RAIN':'NO RAIN'}  (${pct}%)`, willRain?'warn':'success');
-
-  // Show output
-  const panel=document.getElementById('outputPanel');
-  panel.className='output-panel '+(willRain?'rain-result':'dry-result');
-  panel.style.display='block';
-
-  document.getElementById('resultIcon').textContent = willRain?'🌧️':'☀️';
-  document.getElementById('resultVerdict').textContent = willRain?'Rain Expected Tomorrow':'Clear Skies Tomorrow';
-
-  const conf = prob>0.75||prob<0.25 ? 'High Confidence' : prob>0.60||prob<0.40 ? 'Medium Confidence' : 'Low Confidence';
-  document.getElementById('resultSub').textContent = `${conf} · Model: Random Forest · Threshold: 0.450`;
-
-  document.getElementById('probNumber').textContent = pct+'%';
-  setTimeout(()=>{document.getElementById('meterFill').style.width=pct+'%'},100);
-
-  // Metric chips
-  const h9=n('Humidity9am'),h3=n('Humidity3pm'),p9=n('Pressure9am'),p3=n('Pressure3pm');
-  document.getElementById('metricsRow').innerHTML=`
-    <div class="metric-chip"><div class="mc-label">Humidity Drop</div><div class="mc-val">${(h9-h3).toFixed(1)}%</div></div>
-    <div class="metric-chip"><div class="mc-label">Pressure Δ</div><div class="mc-val">${(p3-p9).toFixed(1)} hPa</div></div>
-    <div class="metric-chip"><div class="mc-label">Temp Range</div><div class="mc-val">${(n('MaxTemp')-n('MinTemp')).toFixed(1)}°C</div></div>
-    <div class="metric-chip"><div class="mc-label">Rain Today</div><div class="mc-val">${rainToday?'Yes':'No'}</div></div>
-    <div class="metric-chip"><div class="mc-label">Wind Gust</div><div class="mc-val">${n('WindGustSpeed')} km/h</div></div>
-  `;
-
-  // Pipeline done
-  ps4.classList.remove('active');ps4.classList.add('done');
-
-  btn.disabled=false;btn.textContent='⚡  Run Prediction Again';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  prob.innerHTML = "Probability: " + percent + "%";
 }
 
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+const ctx = document.getElementById('chart');
 
-// ── CHARTS
-const chartColors={
-  grid:'rgba(255,255,255,0.04)',
-  ticks:'#4a6a8a',
-  accent:'#00d4ff',
-  rain:'#4f8ef7',
-  dry:'#00c896',
-  warn:'#f59e0b',
-};
-
-// Feature importance chart
-new Chart(document.getElementById('chartImportance'),{
-  type:'bar',
-  data:{
-    labels:['Humidity3pm','Pressure3pm','Humidity9am','Pressure9am','WindGustSpeed','Rainfall','Temp3pm','RainToday'],
-    datasets:[{
-      data:[0.142,0.128,0.098,0.087,0.071,0.068,0.061,0.055],
-      backgroundColor:[
-        'rgba(0,212,255,0.7)','rgba(0,212,255,0.6)','rgba(0,212,255,0.55)',
-        'rgba(79,142,247,0.6)','rgba(79,142,247,0.5)','rgba(124,58,237,0.6)',
-        'rgba(124,58,237,0.5)','rgba(124,58,237,0.4)',
-      ],
-      borderRadius:5,borderWidth:0,
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Logistic Regression', 'Random Forest', 'XGBoost'],
+    datasets: [{
+      label: 'ROC-AUC',
+      data: [0.861, 0.878, 0.875]
     }]
   },
-  options:{
-    indexAxis:'y',responsive:true,
-    plugins:{legend:{display:false},tooltip:{
-      backgroundColor:'#0b1220',borderColor:'#162840',borderWidth:1,
-      titleColor:'#e8f4fd',bodyColor:'#4a6a8a',
-      callbacks:{label:c=>' Importance: '+c.raw.toFixed(3)}
-    }},
-    scales:{
-      x:{grid:{color:chartColors.grid},ticks:{color:chartColors.ticks,font:{family:'DM Mono',size:10}}},
-      y:{grid:{display:false},ticks:{color:chartColors.ticks,font:{family:'DM Mono',size:10}}},
-    }
+  options: {
+    responsive:true
   }
 });
 
-// Model comparison chart
-new Chart(document.getElementById('chartModels'),{
-  type:'bar',
-  data:{
-    labels:['Logistic\nRegression','Random\nForest','XGBoost'],
-    datasets:[
-      {label:'ROC-AUC', data:[0.861,0.878,0.875],
-       backgroundColor:['rgba(0,212,255,0.5)','rgba(0,200,150,0.7)','rgba(79,142,247,0.5)'],
-       borderRadius:6,borderWidth:0},
-      {label:'F1 Score', data:[0.651,0.721,0.714],
-       backgroundColor:['rgba(0,212,255,0.2)','rgba(0,200,150,0.3)','rgba(79,142,247,0.2)'],
-       borderRadius:6,borderWidth:0},
-    ]
-  },
-  options:{
-    responsive:true,
-    plugins:{
-      legend:{labels:{color:'#4a6a8a',font:{family:'DM Mono',size:10},boxWidth:10}},
-      tooltip:{backgroundColor:'#0b1220',borderColor:'#162840',borderWidth:1,
-        titleColor:'#e8f4fd',bodyColor:'#4a6a8a'}
-    },
-    scales:{
-      x:{grid:{display:false},ticks:{color:chartColors.ticks,font:{family:'DM Mono',size:10}}},
-      y:{min:0.5,max:0.95,grid:{color:chartColors.grid},ticks:{color:chartColors.ticks,font:{family:'DM Mono',size:10}}},
-    }
-  }
-});
 </script>
+
 </body>
 </html>
